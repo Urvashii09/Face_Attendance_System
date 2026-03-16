@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 
+''
+
 from database import (
     add_face_sample,
     add_user,
