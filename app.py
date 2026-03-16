@@ -16,6 +16,9 @@ from database import (
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
+# Ensure the SQLite schema is set up in serverless environments (Vercel import path)
+init_db()
+
 
 # ---------------------------------------------------------------------------
 # Pages
