@@ -91,7 +91,14 @@ def api_register():
             'samples': len(images),
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'Server error during register',
+            'details': str(e),
+            'trace': traceback.format_exc()
+        }), 500
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +140,14 @@ def api_recognize():
             'check_out_limit': check_out_limit,
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'Server error during recognize',
+            'details': str(e),
+            'trace': traceback.format_exc()
+        }), 500
 
 
 # ---------------------------------------------------------------------------

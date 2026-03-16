@@ -1,7 +1,11 @@
+import os
 import sqlite3
 from datetime import date
 
-DB_PATH = 'attendance.db'
+if os.name == 'nt':
+    DB_PATH = 'attendance.db'
+else:
+    DB_PATH = os.environ.get('ATTENDANCE_DB_PATH', '/tmp/attendance.db')
 
 
 def init_db():
