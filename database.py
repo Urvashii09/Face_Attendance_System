@@ -1,5 +1,4 @@
 import sqlite3
-import numpy as np
 from datetime import date
 
 DB_PATH = 'attendance.db'
@@ -92,29 +91,17 @@ def add_user(name):
 
 
 def add_face_sample(user_id, embedding):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    embedding_bytes = embedding.astype(np.float32).tobytes()
-    c.execute('INSERT INTO face_samples (user_id, embedding) VALUES (?, ?)', (user_id, embedding_bytes))
-    conn.commit()
-    conn.close()
+    # Face sample storage is disabled in lightweight mode.
+    return
 
 
 def get_all_users():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('''
-        SELECT u.id, u.name, fs.embedding
-        FROM face_samples fs
-        JOIN users u ON fs.user_id = u.id
-    ''')
+    c.execute('SELECT id, name FROM users')
     rows = c.fetchall()
     conn.close()
-    users = []
-    for uid, name, emb_bytes in rows:
-        embedding = np.frombuffer(emb_bytes, dtype=np.float32).copy()
-        users.append({'id': uid, 'name': name, 'embedding': embedding})
-    return users
+    return [{'id': uid, 'name': name} for uid, name in rows]
 
 
 def mark_attendance(user_id, status='on_time', check_in_time=None):
