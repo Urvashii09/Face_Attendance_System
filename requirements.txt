@@ -2,4 +2,5 @@ flask
 opencv-python-headless
 numpy
 pillow
-face-recognition
+insightface
+onnxruntime
