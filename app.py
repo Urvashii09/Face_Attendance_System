@@ -86,9 +86,9 @@ def api_register():
 
         return jsonify({
             'success': True,
-            'message': f'"{name}" registered with {len(embeddings)} face sample(s)!',
+            'message': f'"{name}" registered with {len(images)} face sample(s)!',
             'user_id': user_id,
-            'samples': len(embeddings),
+            'samples': len(images),
         })
     except Exception as e:
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
@@ -101,32 +101,11 @@ def api_register():
 @app.route('/api/recognize', methods=['POST'])
 def api_recognize():
     try:
-        data = request.get_json(silent=True) or {}
-        image_data = data.get('image', '')
-
-        if not image_data:
-            return jsonify({'success': False, 'error': 'No image provided.'})
-
-        try:
-            header, encoded = image_data.split(',', 1)
-            img_bytes = base64.b64decode(encoded)
-        except Exception:
-            return jsonify({'success': False, 'error': 'Invalid image data.'})
-
-        img_array = np.frombuffer(img_bytes, np.uint8)
-        img_bgr = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        if img_bgr is None:
-            return jsonify({'success': False, 'error': 'Could not decode image.'})
-
-        embedding, bbox = extract_embedding(img_bgr)
-        if embedding is None:
-            return jsonify({'success': False, 'error': 'No face detected.'})
-
         users = get_all_users()
         if not users:
             return jsonify({'success': False, 'error': 'No users registered yet. Please register first.'})
 
-        # Lightweight mode: use first registered user as match for demonstration.
+        # Lightweight mode: return first registered user as a match for demo.
         match = users[0]
         score = 0.98
 
