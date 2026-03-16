@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Home – AttendanceIQ{% endblock %}
+{% block page_title %}Overview{% endblock %}
+{% block page_subtitle %}Overview{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+
+    <!-- Hero -->
+    <div class="hero-section">
+      <div class="hero-pill mb-3">
+        <i class="bi bi-shield-check-fill"></i> Face Recognition Powered
+      </div>
+      <h1 class="hero-title">
+        Smart Attendance<br>
+        <span class="hero-gradient">System</span>
+      </h1>
+      <p class="hero-desc">
+        Automated, contactless attendance tracking using real-time face detection and ArcFace recognition.
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="background:rgba(99,102,241,.1);">
+            <i class="bi bi-people-fill" style="color:var(--accent-light);"></i>
+          </div>
+          <div>
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Registered Users</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="stat-card green d-flex align-items-center gap-3">
+          <div class="stat-icon" style="background:var(--success-bg);">
+            <i class="bi bi-calendar-check-fill" style="color:var(--success-fg);"></i>
+          </div>
+          <div>
+            <div class="stat-value">{{ total_records }}</div>
+            <div class="stat-label">Attendance Records</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4">
+      <div class="col-sm-4">
+        <a href="/register" class="action-btn w-100">
+          <span class="action-icon" style="background:rgba(99,102,241,.1);">
+            <i class="bi bi-person-plus-fill" style="color:var(--accent-light);"></i>
+          </span>
+          <span class="action-label">Register User</span>
+        </a>
+      </div>
+      <div class="col-sm-4">
+        <a href="/attendance" class="action-btn w-100">
+          <span class="action-icon" style="background:var(--success-bg);">
+            <i class="bi bi-camera-fill" style="color:var(--success-fg);"></i>
+          </span>
+          <span class="action-label">Mark Attendance</span>
+        </a>
+      </div>
+      <div class="col-sm-4">
+        <a href="/records" class="action-btn w-100">
+          <span class="action-icon" style="background:var(--info-bg);">
+            <i class="bi bi-table" style="color:var(--info-fg);"></i>
+          </span>
+          <span class="action-label">View Records</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

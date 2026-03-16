@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance – AttendanceIQ{% endblock %}
+{% block page_title %}Mark Attendance{% endblock %}
+{% block page_subtitle %}Mark Attendance{% endblock %}
+
+{% block content %}
+<!-- Top Stats Bar -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:var(--success-bg);">
+        <i class="bi bi-person-check-fill" style="color:var(--success-fg);"></i>
+      </div>
+      <div>
+        <div class="stat-value" id="todayStat">{{ today_count }}</div>
+        <div class="stat-label">Checked In Today</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:rgba(99,102,241,.1);">
+        <i class="bi bi-people-fill" style="color:var(--accent-light);"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:var(--info-bg);">
+        <i class="bi bi-broadcast" style="color:var(--info-fg);"></i>
+      </div>
+      <div>
+        <div class="stat-value" id="scanStatus">OFF</div>
+        <div class="stat-label">Scanner Status</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick nav buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+  <a href="/register" class="btn btn-primary">
+    <i class="bi bi-person-plus-fill me-1"></i>Register User
+  </a>
+  <a href="/records" class="btn btn-outline-secondary">
+    <i class="bi bi-table me-1"></i>View Records
+  </a>
+  <a href="/" class="btn btn-outline-secondary">
+    <i class="bi bi-house me-1"></i>Overview
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left: Camera -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <h4><i class="bi bi-camera-video-fill" style="color:var(--success-fg);"></i>Live Camera Feed</h4>
+        <span class="ms-auto">
+          <span id="scanBadge" class="badge badge-subtle" style="font-size:.72rem;padding:.35rem .7rem;">
+            <i class="bi bi-circle-fill me-1" style="font-size:.4rem;"></i>Idle
+          </span>
+        </span>
+      </div>
+      <div class="card-body p-4">
+
+        <div class="text-center mb-4">
+          <div class="video-wrapper" id="videoWrapper">
+            <video id="video" autoplay playsinline></video>
+            <div class="video-overlay">
+              <div class="corner-mark tl"></div>
+              <div class="corner-mark tr"></div>
+              <div class="corner-mark bl"></div>
+              <div class="corner-mark br"></div>
+              <div class="scan-line"></div>
+            </div>
+            <canvas id="canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center mb-4 flex-wrap">
+          <button class="btn btn-primary px-4" id="startBtn" onclick="startCamera()">
+            <i class="bi bi-camera me-1"></i>Start Camera
+          </button>
+          <button class="btn btn-success px-4" id="scanBtn" onclick="toggleScan()" disabled>
+            <i class="bi bi-play-circle me-1"></i>Start Scanning
+          </button>
+          <button class="btn btn-outline-secondary px-4" id="stopCamBtn" onclick="stopCamera()" disabled>
+            <i class="bi bi-stop-circle me-1"></i>Stop
+          </button>
+        </div>
+
+        <div id="statusBox" class="status-box d-flex align-items-center justify-content-center p-3 alert alert-secondary mb-0">
+          Press <strong class="mx-1">Start Camera</strong> then <strong class="mx-1">Start Scanning</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Today's Log -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h4><i class="bi bi-clock-history" style="color:var(--info-fg);"></i>Today's Log</h4>
+        <span class="ms-auto">
+          <span id="logCount" class="badge badge-accent" style="font-size:.72rem;padding:.35rem .7rem;">0 checked in</span>
+        </span>
+      </div>
+      <div class="card-body p-0">
+        <ul id="logList" class="list-group list-group-flush" style="max-height:480px;overflow-y:auto;"></ul>
+        <div id="logEmpty" class="empty-state" style="padding:2.5rem 1rem;">
+          <i class="bi bi-person-check empty-icon" style="font-size:2.5rem;"></i>
+          <p class="empty-title">No check-ins yet</p>
+          <p class="empty-desc">Start scanning to log attendance.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+{% endblock %}

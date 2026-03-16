@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Register – AttendanceIQ{% endblock %}
+{% block page_title %}Register User{% endblock %}
+{% block page_subtitle %}Face Enrollment{% endblock %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/register.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Left: Enrollment Wizard -->
+  <div class="col-lg-7">
+    <div class="enroll-card card">
+      <div class="card-header">
+        <h5><i class="bi bi-person-bounding-box" style="color:var(--accent-light);"></i>Face Enrollment</h5>
+        <span id="stepBadge" class="ms-auto badge" style="background:rgba(99,102,241,.15);color:var(--accent-light);border:1px solid rgba(99,102,241,.3);font-size:.72rem;padding:.35rem .7rem;">Step 1 of 2</span>
+      </div>
+      <div class="card-body p-4">
+
+        <!-- STEP 1: Name input -->
+        <div id="step1">
+          <div class="enroll-step-label">
+            <span class="step-num">1</span>Enter the person's name
+          </div>
+          <div class="name-input-wrap mb-4">
+            <i class="bi bi-person-fill name-icon"></i>
+            <input type="text" id="nameInput" class="form-control form-control-lg name-field"
+                   placeholder="Full name…" maxlength="100" autocomplete="off" />
+          </div>
+          <button class="btn btn-primary w-100 btn-lg" id="startBtn" onclick="startEnrollment()">
+            <i class="bi bi-camera-fill me-2"></i>Start Face Enrollment
+          </button>
+          <div id="step1Error" class="mt-3" style="display:none;"></div>
+        </div>
+
+        <!-- STEP 2: Auto-capture -->
+        <div id="step2" style="display:none;">
+          <div class="enroll-step-label mb-3">
+            <span class="step-num">2</span>
+            <span id="captureLabel">Position your face in the frame</span>
+          </div>
+
+          <!-- Video + progress ring overlay -->
+          <div class="capture-stage mb-4">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+
+            <!-- Corner marks -->
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+
+            <!-- Progress ring -->
+            <div class="progress-ring-wrap" id="progressRing" style="display:none;">
+              <svg class="progress-ring" viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="50"/>
+                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"
+                        stroke-dasharray="314" stroke-dashoffset="314"/>
+              </svg>
+              <div class="ring-count" id="ringCount">0<span>/5</span></div>
+            </div>
+
+            <!-- Scanning line animation -->
+            <div class="scan-line" id="scanLine" style="display:none;"></div>
+          </div>
+
+          <!-- Sample thumbnails -->
+          <div class="thumb-row" id="thumbRow">
+            <div class="thumb-slot" id="ts0"><i class="bi bi-camera"></i></div>
+            <div class="thumb-slot" id="ts1"><i class="bi bi-camera"></i></div>
+            <div class="thumb-slot" id="ts2"><i class="bi bi-camera"></i></div>
+            <div class="thumb-slot" id="ts3"><i class="bi bi-camera"></i></div>
+            <div class="thumb-slot" id="ts4"><i class="bi bi-camera"></i></div>
+          </div>
+
+          <!-- Status -->
+          <div id="statusBox" class="status-box d-flex align-items-center justify-content-center p-3 alert alert-secondary mt-3 mb-0">
+            Starting camera…
+          </div>
+
+          <!-- Post-capture action buttons (shown after 5 samples) -->
+          <div id="actionBtns" class="d-flex gap-2 mt-3" style="display:none !important;">
+            <button class="btn btn-outline-secondary flex-fill" id="retakeBtn" onclick="retakeCapture()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Retake
+            </button>
+            <button class="btn btn-primary flex-fill" id="confirmBtn" onclick="finishCapture()">
+              <i class="bi bi-person-check-fill me-1"></i>Register User
+            </button>
+          </div>
+
+          <button class="btn btn-outline-secondary w-100 mt-2" id="cancelBtn" onclick="cancelEnrollment()">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Registered Users -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="bi bi-people-fill" style="color:var(--accent-light);"></i>Registered Users</h5>
+        <span class="ms-auto badge" style="background:rgba(99,102,241,.15);color:var(--accent-light);border:1px solid rgba(99,102,241,.3);font-size:.72rem;padding:.35rem .7rem;">
+          {{ total_users }} users
+        </span>
+      </div>
+      <div class="card-body p-0">
+        {% if users %}
+        <div style="max-height:520px;overflow-y:auto;">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th style="width:90px;">Samples</th>
+                <th style="width:50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for uid, name, created_at, sample_count in users %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-circle avatar-accent">{{ name[0].upper() }}</span>
+                    <div>
+                      <div style="font-weight:600;font-size:.875rem;">{{ name }}</div>
+                      <div style="font-size:.72rem;color:var(--text-muted);">{{ created_at[:10] }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge" style="background:rgba(63,185,80,.12);color:var(--success-fg);border:1px solid rgba(63,185,80,.25);font-size:.72rem;">
+                    {{ sample_count }} <i class="bi bi-image ms-1"></i>
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ uid }}, '{{ name }}')" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5" style="color:var(--text-muted);">
+          <i class="bi bi-person-plus" style="font-size:2.5rem;opacity:.4;"></i>
+          <p class="mt-2 mb-0" style="font-weight:600;">No users yet</p>
+          <p style="font-size:.8rem;">Register your first user using the form.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const TOTAL_SAMPLES   = 5;
+  const CAPTURE_DELAY   = 800;   // ms between each auto-capture
+  const COUNTDOWN_START = 3;     // seconds countdown before capturing starts
+
+  let stream         = null;
+  let capturedImages = [];
+  let captureTimer   = null;
+  let enrollName     = '';
+
+  /* ── Step 1 → Start enrollment ── */
+  async function startEnrollment() {
+    enrollName = document.getElementById('nameInput').value.trim();
+    const errBox = document.getElementById('step1Error');
+    if (!enrollName) {
+      errBox.style.display = '';
+      errBox.innerHTML = '<div class="alert alert-warning mb-0"><i class="bi bi-exclamation-circle me-2"></i>Please enter a name.</div>';
+      return;
+    }
+    errBox.style.display = 'none';
+
+    // Switch to step 2
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = '';
+    document.getElementById('stepBadge').textContent = 'Step 2 of 2';
+
+    setStatus('<div class="spinner-border spinner-border-sm me-2"></div>Starting camera…', 'secondary');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      document.getElementById('video').srcObject = stream;
+      document.getElementById('video').onloadedmetadata = () => startCountdown();
+    } catch (e) {
+      setStatus('<i class="bi bi-x-circle-fill me-2"></i>Camera error: ' + e.message, 'danger');
+    }
+  }
+
+  /* ── Countdown before auto-capture ── */
+  function startCountdown() {
+    document.getElementById('scanLine').style.display = 'block';
+    document.getElementById('progressRing').style.display = 'flex';
+    let secs = COUNTDOWN_START;
+    setStatus(`<i class="bi bi-camera-fill me-2"></i>Get ready… starting in <strong>${secs}</strong>`, 'info');
+    document.getElementById('captureLabel').textContent = 'Hold still — capturing automatically';
+
+    const tick = setInterval(() => {
+      secs--;
+      if (secs > 0) {
+        setStatus(`<i class="bi bi-camera-fill me-2"></i>Get ready… starting in <strong>${secs}</strong>`, 'info');
+      } else {
+        clearInterval(tick);
+        beginAutoCapture();
+      }
+    }, 1000);
+  }
+
+  /* ── Auto-capture loop ── */
+  function beginAutoCapture() {
+    capturedImages = [];
+    updateRing(0);
+    captureOne();
+  }
+
+  function updateRing(count) {
+    const circumference = 314;
+    const offset = circumference - (circumference * count / TOTAL_SAMPLES);
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+    document.getElementById('ringCount').innerHTML = `${count}<span>/${TOTAL_SAMPLES}</span>`;
+  }
+
+  function captureOne() {
+    if (capturedImages.length >= TOTAL_SAMPLES) {
+      showActionButtons();
+      return;
+    }
+    const video  = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const img = canvas.toDataURL('image/jpeg', 0.9);
+    capturedImages.push(img);
+
+    const slot = document.getElementById('ts' + (capturedImages.length - 1));
+    if (slot) { slot.innerHTML = `<img src="${img}" class="thumb-img" />`; slot.classList.add('filled'); }
+
+    updateRing(capturedImages.length);
+    if (capturedImages.length < TOTAL_SAMPLES) {
+      setStatus(`<div class="spinner-border spinner-border-sm me-2"></div>Capturing… <strong>${capturedImages.length}/${TOTAL_SAMPLES}</strong> — move slightly for variety`, 'light');
+      captureTimer = setTimeout(captureOne, CAPTURE_DELAY);
+    } else {
+      showActionButtons();
+    }
+  }
+
+  /* ── Show Retake / Register buttons after all samples captured ── */
+  function showActionButtons() {
+    clearTimeout(captureTimer);
+    document.getElementById('scanLine').style.display = 'none';
+    document.getElementById('captureLabel').textContent = '5 samples captured — review below';
+    setStatus('<i class="bi bi-check-circle-fill me-2" style="color:var(--success-fg);"></i>All 5 samples captured! <strong>Register</strong> or <strong>Retake</strong> if needed.', 'success');
+    document.getElementById('actionBtns').style.cssText = 'display:flex !important;';
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+
+  /* ── Retake: clear samples and re-run capture ── */
+  async function retakeCapture() {
+    capturedImages = [];
+    for (let i = 0; i < TOTAL_SAMPLES; i++) {
+      const s = document.getElementById('ts' + i);
+      if (s) { s.innerHTML = '<i class="bi bi-camera"></i>'; s.classList.remove('filled'); }
+    }
+    updateRing(0);
+    document.getElementById('actionBtns').style.cssText = 'display:none !important;';
+    document.getElementById('cancelBtn').style.display = '';
+    document.getElementById('captureLabel').textContent = 'Position your face in the frame';
+    setStatus('<div class="spinner-border spinner-border-sm me-2"></div>Starting camera…', 'secondary');
+
+    // Restart camera if it was stopped
+    if (!stream) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        document.getElementById('video').srcObject = stream;
+        await new Promise(resolve => { document.getElementById('video').onloadedmetadata = resolve; });
+      } catch (e) {
+        setStatus('<i class="bi bi-x-circle-fill me-2"></i>Camera error: ' + e.message, 'danger');
+        return;
+      }
+    }
+
+    document.getElementById('scanLine').style.display = 'block';
+    let secs = COUNTDOWN_START;
+    setStatus(`<i class="bi bi-camera-fill me-2"></i>Get ready… starting in <strong>${secs}</strong>`, 'info');
+    const tick = setInterval(() => {
+      secs--;
+      if (secs > 0) {
+        setStatus(`<i class="bi bi-camera-fill me-2"></i>Get ready… starting in <strong>${secs}</strong>`, 'info');
+      } else {
+        clearInterval(tick);
+        beginAutoCapture();
+      }
+    }, 1000);
+  }
+
+  /* ── Register user ── */
+  async function finishCapture() {
+    clearTimeout(captureTimer);
+    document.getElementById('actionBtns').style.cssText = 'display:none !important;';
+    setStatus('<div class="spinner-border spinner-border-sm me-2"></div>Registering <strong>' + enrollName + '</strong>…', 'light');
+    try {
+      const resp = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: enrollName, images: capturedImages })
+      });
+      const result = await resp.json();
+      if (result.success) {
+        stopCamera();
+        setStatus(`<i class="bi bi-check-circle-fill me-2"></i><strong>${enrollName}</strong> registered with ${result.samples} samples!`, 'success');
+        showToast(result.message, 'success');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        setStatus(`<i class="bi bi-x-circle-fill me-2"></i>${result.error}`, 'danger');
+        showToast(result.error, 'danger');
+        document.getElementById('actionBtns').style.cssText = 'display:flex !important;';
+      }
+    } catch (e) {
+      setStatus('<i class="bi bi-x-circle-fill me-2"></i>Network error: ' + e.message, 'danger');
+      document.getElementById('actionBtns').style.cssText = 'display:flex !important;';
+    }
+  }
+
+  /* ── Cancel → back to step 1 ── */
+  function cancelEnrollment() {
+    clearTimeout(captureTimer);
+    stopCamera();
+    capturedImages = [];
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = '';
+    document.getElementById('stepBadge').textContent = 'Step 1 of 2';
+    document.getElementById('actionBtns').style.cssText = 'display:none !important;';
+    document.getElementById('cancelBtn').style.display = '';
+    for (let i = 0; i < TOTAL_SAMPLES; i++) {
+      const s = document.getElementById('ts' + i);
+      if (s) { s.innerHTML = '<i class="bi bi-camera"></i>'; s.classList.remove('filled'); }
+    }
+  }
+
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    document.getElementById('video').srcObject = null;
+  }
+
+  function setStatus(html, type) {
+    const box = document.getElementById('statusBox');
+    box.className = `status-box d-flex align-items-center justify-content-center p-3 alert alert-${type} mt-3 mb-0`;
+    box.innerHTML = html;
+  }
+
+  async function deleteUser(id, name) {
+    if (!confirm('Delete "' + name + '" and all their records?')) return;
+    const resp = await fetch('/api/delete_user/' + id, { method: 'DELETE' });
+    const result = await resp.json();
+    if (result.success) {
+      showToast('"' + name + '" deleted', 'success');
+      setTimeout(() => location.reload(), 500);
+    }
+  }
+
+  // Allow pressing Enter on name field
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') startEnrollment();
+    });
+  });
+</script>
+{% endblock %}
+

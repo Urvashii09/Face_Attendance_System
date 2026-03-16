@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Records – AttendanceIQ{% endblock %}
+{% block page_title %}Records{% endblock %}
+{% block page_subtitle %}Records{% endblock %}
+
+{% block content %}
+<!-- Top Stats Bar -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:var(--info-bg);">
+        <i class="bi bi-journal-check" style="color:var(--info-fg);"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ records|length }}</div>
+        <div class="stat-label">Total Records</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:rgba(99,102,241,.1);">
+        <i class="bi bi-people-fill" style="color:var(--accent-light);"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ users|length }}</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card green d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:var(--success-bg);">
+        <i class="bi bi-calendar-check-fill" style="color:var(--success-fg);"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ records|groupby(1)|list|length if records else 0 }}</div>
+        <div class="stat-label">Active Days</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick nav buttons -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+  <a href="/register" class="btn btn-primary">
+    <i class="bi bi-person-plus-fill me-1"></i>Register User
+  </a>
+  <a href="/attendance" class="btn btn-success">
+    <i class="bi bi-camera-fill me-1"></i>Mark Attendance
+  </a>
+  <a href="/" class="btn btn-outline-secondary">
+    <i class="bi bi-house me-1"></i>Overview
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left: Attendance log -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <h4><i class="bi bi-journal-check" style="color:var(--info-fg);"></i>Attendance Log</h4>
+        <span class="ms-auto badge badge-info" style="font-size:.72rem;padding:.35rem .7rem;">
+          {{ records|length }} entries
+        </span>
+      </div>
+      <div class="card-body p-0">
+        {% if records %}
+        <div class="table-responsive" style="max-height:540px;overflow-y:auto;">
+          <table class="table table-hover mb-0">
+            <thead style="position:sticky;top:0;z-index:1;">
+              <tr>
+                <th style="width:45px;">#</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, date, timestamp, status, check_in_time in records %}
+              <tr>
+                <td style="color:var(--text-muted);font-size:.78rem;">{{ loop.index }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-circle avatar-accent">{{ name[0].upper() }}</span>
+                    <span style="font-weight:600;">{{ name }}</span>
+                  </div>
+                </td>
+                <td style="color:var(--text-muted);font-size:.85rem;">{{ date }}</td>
+                <td>
+                  <span style="font-size:.85rem;color:var(--text-muted);">{{ check_in_time or (timestamp[11:16] if timestamp and timestamp|length > 10 else timestamp) }}</span>
+                </td>
+                <td>
+                  {% if status == 'on_time' %}
+                    <span class="badge" style="background:rgba(63,185,80,.15);color:var(--success-fg);border:1px solid rgba(63,185,80,.3);font-size:.72rem;padding:.3rem .6rem;">
+                      <i class="bi bi-check-circle-fill me-1"></i>On Time
+                    </span>
+                  {% elif status == 'late' %}
+                    <span class="badge" style="background:rgba(210,153,34,.15);color:var(--warning-fg);border:1px solid rgba(210,153,34,.3);font-size:.72rem;padding:.3rem .6rem;">
+                      <i class="bi bi-clock-fill me-1"></i>Late
+                    </span>
+                  {% elif status == 'overtime' %}
+                    <span class="badge" style="background:rgba(248,81,73,.12);color:var(--danger-fg);border:1px solid rgba(248,81,73,.3);font-size:.72rem;padding:.3rem .6rem;">
+                      <i class="bi bi-lightning-fill me-1"></i>Overtime
+                    </span>
+                  {% else %}
+                    <span class="badge" style="background:var(--bg-elevated);color:var(--text-muted);font-size:.72rem;padding:.3rem .6rem;">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="bi bi-inbox empty-icon"></i>
+          <p class="empty-title">No records yet</p>
+          <p class="empty-desc">Start scanning faces to log attendance.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Users -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h4><i class="bi bi-people-fill" style="color:var(--accent-light);"></i>Registered Users</h4>
+        <span class="ms-auto badge badge-accent" style="font-size:.72rem;padding:.35rem .7rem;">
+          {{ users|length }} users
+        </span>
+      </div>
+      <div class="card-body p-0">
+        {% if users %}
+        <div style="max-height:540px;overflow-y:auto;">
+          <table class="table table-hover mb-0">
+            <thead style="position:sticky;top:0;z-index:1;">
+              <tr>
+                <th>Name</th>
+                <th style="width:75px;">Samples</th>
+                <th style="width:50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for uid, name, created_at, sample_count in users %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-circle avatar-accent">{{ name[0].upper() }}</span>
+                    <div>
+                      <div style="font-weight:600;font-size:.88rem;">{{ name }}</div>
+                      <div style="font-size:.7rem;color:var(--text-muted);">{{ created_at[:10] }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-success" style="font-size:.7rem;">
+                    {{ sample_count }} <i class="bi bi-image ms-1"></i>
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ uid }}, '{{ name }}')" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2.5rem 1rem;">
+          <i class="bi bi-person-plus empty-icon" style="font-size:2rem;"></i>
+          <p class="empty-title">No users yet</p>
+          <p class="empty-desc">Register users to get started.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function deleteUser(id, name) {
+    if (!confirm('Delete "' + name + '" and all their attendance records?')) return;
+    const resp = await fetch('/api/delete_user/' + id, { method: 'DELETE' });
+    const result = await resp.json();
+    if (result.success) {
+      showToast('"' + name + '" deleted', 'success');
+      setTimeout(() => location.reload(), 500);
+    } else {
+      showToast('Failed to delete', 'danger');
+    }
+  }
+</script>
+{% endblock %}
