@@ -21,7 +21,7 @@ from database import (
 )
 from face_utils import extract_embedding, recognize_face
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 
 # ---------------------------------------------------------------------------
