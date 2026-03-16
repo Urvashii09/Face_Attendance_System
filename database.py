@@ -95,17 +95,27 @@ def add_user(name):
 
 
 def add_face_sample(user_id, embedding):
-    # Face sample storage is disabled in lightweight mode.
-    return
+    # Store a record in face_samples so sample counts are reflected in the UI.
+    # Embedding may be None in lightweight mode.
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('INSERT INTO face_samples (user_id, embedding) VALUES (?, ?)', (user_id, embedding if embedding is not None else b''))
+    conn.commit()
+    conn.close()
 
 
 def get_all_users():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT id, name FROM users')
+    c.execute('''
+        SELECT u.id, u.name, fs.embedding
+        FROM face_samples fs
+        JOIN users u ON fs.user_id = u.id
+    ''')
     rows = c.fetchall()
     conn.close()
-    return [{'id': uid, 'name': name} for uid, name in rows]
+    # Keep behavior of user matching by first user; embeddings are not used in lightweight mode.
+    return [{'id': uid, 'name': name} for uid, name, emb in rows]
 
 
 def mark_attendance(user_id, status='on_time', check_in_time=None):
